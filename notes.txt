@@ -1,0 +1,108 @@
+# FastAPI Projesi Nasıl Başlatılır
+pip install fastapi uvicorn
+uvicorn main:app --reload
+
+# Basit FastAPI Uygulaması Nasıl Yazılır
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+def home():
+    return {"message": "Merhaba FastAPI"}
+
+# Route (Yol) Üzerinden Veri Nasıl Alınır
+@app.get("/kullanici/{id}")
+def kullanici_bul(id: int):
+    return {"kullanici_id": id}
+
+# Query Parametreleri Nasıl Kullanılır
+@app.get("/arama")
+def arama(q: str = ""):
+    return {"aranan": q}
+
+# POST İsteği Nasıl Yapılır
+from pydantic import BaseModel
+
+class Kullanici(BaseModel):
+    isim: str
+    yas: int
+
+@app.post("/kullanici")
+def kullanici_ekle(k: Kullanici):
+    return {"kullanici_eklendi": k}
+
+# PUT (Güncelleme) Nasıl Yapılır
+@app.put("/kullanici/{id}")
+def kullanici_guncelle(id: int, k: Kullanici):
+    return {"id": id, "guncellenen_veri": k}
+
+# DELETE (Silme) Nasıl Yapılır
+@app.delete("/kullanici/{id}")
+def kullanici_sil(id: int):
+    return {"silinen_id": id}
+
+# Response Status Kodu Nasıl Değiştirilir
+from fastapi import status
+
+@app.post("/giris", status_code=status.HTTP_201_CREATED)
+def giris_yap():
+    return {"durum": "Giriş başarılı"}
+
+# Pydantic Model İçin Default Değer Nasıl Verilir
+class Urun(BaseModel):
+    isim: str
+    stok: int = 0  # default 0
+
+# Pydantic Validator Nasıl Kullanılır
+from pydantic import validator
+
+class Kisi(BaseModel):
+    isim: str
+    yas: int
+
+    @validator("yas")
+    def yas_kontrol(cls, v):
+        if v < 0:
+            raise ValueError("Yaş negatif olamaz")
+        return v
+
+# FastAPI ile JSON Yanıtları Otomatik Verilir
+@app.get("/json")
+def get_json():
+    return {"ad": "İrem", "meslek": "Yazılım Mühendisi"}
+
+# FastAPI'de Middleware Nasıl Eklenir
+from fastapi import Request
+
+@app.middleware("http")
+async def log_istek(request: Request, call_next):
+    print("İstek geldi:", request.url)
+    response = await call_next(request)
+    return response
+
+# FastAPI'de CORS Ayarı Nasıl Yapılır
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# FastAPI'de Header Nasıl Okunur
+from fastapi import Header
+
+@app.get("/headers")
+def header_al(token: str = Header(default="")):
+    return {"Token": token}
+
+# FastAPI'de Ortam Değişkeni Kullanımı (dotenv)
+pip install python-dotenv
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+API_KEY = os.getenv("API_KEY")
